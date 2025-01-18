@@ -2,6 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
+import { SocketService } from './services/socketService.js';
+import MarketService from './services/marketService.js';
 import sensorRoutes from './routes/sensorRoutes.js';
 import aiRoutes from './routes/aiRoutes.js';
 import blockchainRoutes from './routes/blockchainRoutes.js';
@@ -10,10 +12,16 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
     cors: {
-        origin: "http://localhost:5173", 
+        origin: "http://localhost:5173",
         methods: ["GET", "POST"]
     }
 });
+
+const socketService = new SocketService(io);
+const marketService = new MarketService(io);
+
+socketService.initialize();
+marketService.initialize();
 
 app.use(cors());
 app.use(express.json());
@@ -21,13 +29,6 @@ app.use(express.json());
 app.use('/api/sensors', sensorRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/blockchain', blockchainRoutes);
-
-io.on('connection', (socket) => {
-    console.log('Client connected');
-    socket.on('disconnect', () => {
-        console.log('Client disconnected');
-    });
-});
 
 app.use((err, req, res, next) => {
     console.error(err.stack);

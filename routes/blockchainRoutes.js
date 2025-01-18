@@ -1,9 +1,10 @@
 import express from 'express';
-import { getBalance, transferCredits } from '../controllers/blockchainController.js';
+import { getBalance, executeTrade, getTransactions } from '../controllers/blockchainController.js';
 
 const router = express.Router();
 
 router.get('/balance/:address', getBalance);
-router.post('/transfer', transferCredits);
+router.post('/trade', executeTrade);
+router.get('/transactions/:address', getTransactions);
 
 export default router;

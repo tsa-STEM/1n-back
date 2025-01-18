@@ -1,42 +1,51 @@
-import Web3 from 'web3';
+class BlockchainService {
+    constructor() {
+        this.accounts = new Map();
+        this.transactions = [];
+        this.currentPrice = 28.45;
 
-const web3 = new Web3('http://127.0.0.1:7545');
-
-const mockCarbonCredits = {
-    balances: new Map(),
+        this.accounts.set('0x742d35Cc6634C0532925a3b844Bc454e4438f44e', 1000);
+    }
 
     async getBalance(address) {
-        if (!this.balances.has(address)) {
-            this.balances.set(address, Math.floor(Math.random() * 1000));
-        }
-        return this.balances.get(address);
-    },
-
-    async transfer(from, to, amount) {
-        const fromBalance = await this.getBalance(from);
-        if (fromBalance < amount) {
-            throw new Error('Insufficient credits');
-        }
-
-        this.balances.set(from, fromBalance - amount);
-        const toBalance = await this.getBalance(to);
-        this.balances.set(to, toBalance + amount);
-
-        return {
-            transaction: {
-                hash: '0x' + Math.random().toString(16).substr(2, 40),
-                from,
-                to,
-                amount
-            }
-        };
+        return this.accounts.get(address) || 0;
     }
-};
 
-export const getCreditsBalance = async (address) => {
-    return await mockCarbonCredits.getBalance(address);
-};
+    async executeTrade(type, address, amount, price) {
+        const currentBalance = await this.getBalance(address);
 
-export const transferCarbonCredits = async (from, to, amount) => {
-    return await mockCarbonCredits.transfer(from, to, amount);
-};
+        if (type === 'buy') {
+            const totalCost = amount * price;
+            return {
+                hash: '0x' + Math.random().toString(16).substr(2, 40),
+                from: 'Market',
+                to: address,
+                amount,
+                price,
+                timestamp: new Date().toISOString()
+            };
+        } else {
+            if (currentBalance < amount) {
+                throw new Error('Insufficient credits');
+            }
+
+            this.accounts.set(address, currentBalance - amount);
+            return {
+                hash: '0x' + Math.random().toString(16).substr(2, 40),
+                from: address,
+                to: 'Market',
+                amount,
+                price,
+                timestamp: new Date().toISOString()
+            };
+        }
+    }
+
+    async getTransactions(address) {
+        return this.transactions.filter(tx =>
+            tx.from === address || tx.to === address
+        );
+    }
+}
+
+export default new BlockchainService();
